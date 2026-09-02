@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}All meetings — Meeting Log{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <h1>Your meetings</h1>
+    <p class="page-sub">Every partner and branch conversation, logged and searchable.</p>
+  </div>
+  <a href="{{ url_for('add_meeting') }}" class="btn-primary btn-compact">+ Log a meeting</a>
+</header>
+
+<section class="stat-row">
+  <div class="stat-card">
+    <span class="stat-value">{{ total }}</span>
+    <span class="stat-label">Total logged</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value">{{ upcoming }}</span>
+    <span class="stat-label">Scheduled</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value">{{ follow_up }}</span>
+    <span class="stat-label">Needs follow-up</span>
+  </div>
+</section>
+
+<div class="filter-row">
+  <a href="{{ url_for('dashboard') }}" class="chip {{ 'chip-active' if not status_filter }}">All</a>
+  {% for s in ["Scheduled", "Completed", "Follow-up Needed", "Cancelled"] %}
+    <a href="{{ url_for('dashboard', status=s) }}" class="chip {{ 'chip-active' if status_filter == s }}">{{ s }}</a>
+  {% endfor %}
+</div>
+
+{% if meetings %}
+<div class="table-wrap">
+  <table class="meeting-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Title</th>
+        <th>Partner / Branch</th>
+        <th>Type</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in meetings %}
+      <tr>
+        <td>{{ m.meeting_date.strftime("%b %d, %Y") }}{% if m.meeting_time %} &middot; {{ m.meeting_time.strftime("%H:%M") }}{% endif %}</td>
+        <td><a href="{{ url_for('view_meeting', meeting_id=m.id) }}" class="row-title">{{ m.title }}</a></td>
+        <td>{{ m.partner_branch }}</td>
+        <td>{{ m.meeting_type }}</td>
+        <td><span class="badge badge-{{ m.priority|lower }}">{{ m.priority }}</span></td>
+        <td><span class="badge badge-status-{{ m.status|lower|replace(' ', '-') }}">{{ m.status }}</span></td>
+        <td class="row-actions">
+          <a href="{{ url_for('edit_meeting', meeting_id=m.id) }}">Edit</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <p>No meetings logged yet.</p>
+  <a href="{{ url_for('add_meeting') }}" class="btn-primary btn-compact">Log your first meeting</a>
+</div>
+{% endif %}
+{% endblock %}

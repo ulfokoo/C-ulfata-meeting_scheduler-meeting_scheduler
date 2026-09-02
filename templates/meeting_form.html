@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit meeting" if mode == "edit" else "Log a meeting" }} — Meeting Log{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <h1>{{ "Edit meeting" if mode == "edit" else "Log a meeting" }}</h1>
+    <p class="page-sub">Capture the agenda, discussion, and follow-ups while they're fresh.</p>
+  </div>
+</header>
+
+<form method="POST" class="meeting-form">
+  <div class="form-grid">
+    <div class="form-field span-2">
+      <label for="title">Meeting title</label>
+      <input type="text" id="title" name="title" value="{{ form_data.get('title', '') }}" required placeholder="e.g. Q3 Review — Acme Trading">
+    </div>
+
+    <div class="form-field span-2">
+      <label for="partner_branch">Partner / Branch</label>
+      <input type="text" id="partner_branch" name="partner_branch" value="{{ form_data.get('partner_branch', '') }}" required placeholder="e.g. Acme Trading Co. — Nairobi Branch">
+    </div>
+
+    <div class="form-field">
+      <label for="meeting_date">Date</label>
+      <input type="date" id="meeting_date" name="meeting_date" value="{{ form_data.get('meeting_date', '') }}" required>
+    </div>
+
+    <div class="form-field">
+      <label for="meeting_time">Time</label>
+      <input type="time" id="meeting_time" name="meeting_time" value="{{ form_data.get('meeting_time', '') }}">
+    </div>
+
+    <div class="form-field">
+      <label for="meeting_type">Meeting type</label>
+      <select id="meeting_type" name="meeting_type">
+        {% for t in ["In-person", "Video Call", "Phone Call", "Site Visit", "Other"] %}
+        <option value="{{ t }}" {{ "selected" if form_data.get('meeting_type') == t }}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="priority">Priority</label>
+      <select id="priority" name="priority">
+        {% for p in ["Low", "Medium", "High"] %}
+        <option value="{{ p }}" {{ "selected" if form_data.get('priority', 'Medium') == p }}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="status">Status</label>
+      <select id="status" name="status">
+        {% for s in ["Scheduled", "Completed", "Follow-up Needed", "Cancelled"] %}
+        <option value="{{ s }}" {{ "selected" if form_data.get('status', 'Scheduled') == s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-field span-2">
+      <label>Attendees</label>
+      <div class="attendee-table-wrap">
+        <table class="attendee-table" id="attendee-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Position</th>
+              <th>Contact</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="attendee-rows"></tbody>
+        </table>
+        <button type="button" id="add-attendee-row" class="btn-ghost btn-compact">+ Add attendee</button>
+      </div>
+      <textarea id="attendees" name="attendees" style="display:none;">{{ form_data.get('attendees', '') }}</textarea>
+    </div>
+
+    <div class="form-field span-2">
+      <div class="field-label-row">
+        <label for="agenda">Agenda items</label>
+        <button type="button" class="enhance-btn" data-target="agenda">✨ Enhance</button>
+      </div>
+      <textarea id="agenda" name="agenda" rows="3">{{ form_data.get('agenda', '') }}</textarea>
+    </div>
+
+    <div class="form-field span-2">
+      <label for="discussion_points">Key discussion points</label>
+      <textarea id="discussion_points" name="discussion_points" rows="4">{{ form_data.get('discussion_points', '') }}</textarea>
+    </div>
+
+    <div class="form-field span-2">
+      <label for="decisions">Decisions made</label>
+      <textarea id="decisions" name="decisions" rows="3">{{ form_data.get('decisions', '') }}</textarea>
+    </div>
+
+    <div class="form-field span-2">
+      <label for="action_items">Action items</label>
+      <textarea id="action_items" name="action_items" rows="3">{{ form_data.get('action_items', '') }}</textarea>
+    </div>
+
+    <div class="form-field span-2">
+      <label for="ideas">Ideas raised</label>
+      <textarea id="ideas" name="ideas" rows="2">{{ form_data.get('ideas', '') }}</textarea>
+    </div>
+
+    <div class="form-field span-2">
+      <label for="notes">Other notes</label>
+      <textarea id="notes" name="notes" rows="2">{{ form_data.get('notes', '') }}</textarea>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <a href="{{ url_for('dashboard') }}" class="btn-ghost">Cancel</a>
+    <button type="submit" class="btn-primary">{{ "Save changes" if mode == "edit" else "Save meeting" }}</button>
+  </div>
+</form>
+
+{% block scripts %}
+<script>
+(function () {
+  const rowsBody = document.getElementById('attendee-rows');
+  const hiddenField = document.getElementById('attendees');
+  const addBtn = document.getElementById('add-attendee-row');
+  const form = document.querySelector('.meeting-form');
+
+  function addRow(name, position, contact) {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><input type="text" class="att-name" placeholder="Jane Doe"></td>' +
+      '<td><input type="text" class="att-position" placeholder="Branch Manager"></td>' +
+      '<td><input type="text" class="att-contact" placeholder="jane@partner.com"></td>' +
+      '<td><button type="button" class="remove-row-btn" title="Remove">&times;</button></td>';
+    tr.querySelector('.att-name').value = name || '';
+    tr.querySelector('.att-position').value = position || '';
+    tr.querySelector('.att-contact').value = contact || '';
+    tr.querySelector('.remove-row-btn').addEventListener('click', function () { tr.remove(); });
+    rowsBody.appendChild(tr);
+  }
+
+  const existing = hiddenField.value.trim();
+  if (existing) {
+    existing.split('\n').forEach(function (line) {
+      const parts = line.split('/').map(function (p) { return p.trim(); });
+      addRow(parts[0], parts[1], parts[2]);
+    });
+  } else {
+    addRow('', '', '');
+  }
+
+  addBtn.addEventListener('click', function () { addRow('', '', ''); });
+
+  form.addEventListener('submit', function () {
+    const lines = [];
+    rowsBody.querySelectorAll('tr').forEach(function (tr) {
+      const name = tr.querySelector('.att-name').value.trim();
+      const position = tr.querySelector('.att-position').value.trim();
+      const contact = tr.querySelector('.att-contact').value.trim();
+      if (name || position || contact) lines.push(name + ' / ' + position + ' / ' + contact);
+    });
+    hiddenField.value = lines.join('\n');
+  });
+})();
+</script>
+<script>
+document.querySelectorAll('.enhance-btn').forEach(function (btn) {
+  btn.addEventListener('click', async function () {
+    const targetId = btn.getAttribute('data-target');
+    const field = document.getElementById(targetId);
+    if (!field.value.trim()) return;
+
+    const originalLabel = btn.textContent;
+    btn.textContent = 'Enhancing...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/enhance-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: field.value }),
+      });
+      const data = await res.json();
+      if (data.enhanced) {
+        field.value = data.enhanced;
+      } else {
+        alert(data.error || 'Could not enhance text.');
+      }
+    } catch (err) {
+      alert('Something went wrong. Please try again.');
+    } finally {
+      btn.textContent = originalLabel;
+      btn.disabled = false;
+    }
+  });
+});
+</script>
+{% endblock %}
+{% endblock %}

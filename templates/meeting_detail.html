@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ meeting.title }} — Meeting Log{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="page-sub">{{ meeting.partner_branch }}</p>
+    <h1>{{ meeting.title }}</h1>
+    <p class="page-sub">
+      {{ meeting.meeting_date.strftime("%B %d, %Y") }}
+      {% if meeting.meeting_time %} &middot; {{ meeting.meeting_time.strftime("%H:%M") }}{% endif %}
+      &middot; {{ meeting.meeting_type }}
+    </p>
+  </div>
+  <div class="detail-actions">
+    <a href="{{ url_for('edit_meeting', meeting_id=meeting.id) }}" class="btn-ghost">Edit</a>
+    <form method="POST" action="{{ url_for('delete_meeting', meeting_id=meeting.id) }}"
+          onsubmit="return confirm('Delete this meeting? This cannot be undone.');">
+      <button type="submit" class="btn-danger">Delete</button>
+    </form>
+  </div>
+</header>
+
+<div class="badge-row">
+  <span class="badge badge-{{ meeting.priority|lower }}">{{ meeting.priority }} priority</span>
+  <span class="badge badge-status-{{ meeting.status|lower|replace(' ', '-') }}">{{ meeting.status }}</span>
+</div>
+
+<div class="detail-grid">
+  {% macro block(label, value) %}
+    <div class="detail-block">
+      <h3>{{ label }}</h3>
+      <p>{{ value if value else "—" }}</p>
+    </div>
+  {% endmacro %}
+
+  <div class="detail-block">
+    <h3>Attendees</h3>
+    {% if meeting.attendees %}
+    <table class="attendee-view-table">
+      <thead><tr><th>Name</th><th>Position</th><th>Contact</th></tr></thead>
+      <tbody>
+        {% for line in meeting.attendees.split('\n') if line.strip() %}
+        {% set parts = line.split('/') %}
+        <tr>
+          <td>{{ parts[0].strip() if parts|length > 0 else '' }}</td>
+          <td>{{ parts[1].strip() if parts|length > 1 else '' }}</td>
+          <td>{{ parts[2].strip() if parts|length > 2 else '' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>—</p>
+    {% endif %}
+  </div>
+  {{ block("Agenda items", meeting.agenda) }}
+  {{ block("Key discussion points", meeting.discussion_points) }}
+  {{ block("Decisions made", meeting.decisions) }}
+  {{ block("Action items", meeting.action_items) }}
+  {{ block("Ideas raised", meeting.ideas) }}
+  {{ block("Other notes", meeting.notes) }}
+</div>
+{% endblock %}

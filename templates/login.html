@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Log in — Meeting Log{% endblock %}
+{% block auth_content %}
+<div class="auth-screen">
+  <div class="auth-card">
+    <p class="auth-eyebrow">Meeting Log</p>
+    <h1>Welcome back</h1>
+    <p class="auth-sub">Log in to see your partner and branch meetings.</p>
+
+    <form method="POST" action="{{ url_for('login') }}" class="auth-form">
+      <label for="identifier">Username or email</label>
+      <input type="text" id="identifier" name="identifier" required autofocus>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit" class="btn-primary">Log in</button>
+    </form>
+
+    <p class="auth-switch">New here? <a href="{{ url_for('register') }}">Create an account</a></p>
+  </div>
+</div>
+{% endblock %}
