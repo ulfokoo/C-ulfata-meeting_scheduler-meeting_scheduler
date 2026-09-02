@@ -337,7 +337,7 @@ def enhance_text():
 
     try:
         genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = genai.GenerativeModel("gemini-3.6-flash")
         prompt = (
             "Fix the grammar and improve the vocabulary of the following meeting-notes "
             "text. Keep the same meaning, structure, and any line breaks. Keep it "
