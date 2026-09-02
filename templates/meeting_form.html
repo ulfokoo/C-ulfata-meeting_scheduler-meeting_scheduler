@@ -85,27 +85,42 @@
     </div>
 
     <div class="form-field span-2">
-      <label for="discussion_points">Key discussion points</label>
+      <div class="field-label-row">
+        <label for="discussion_points">Key discussion points</label>
+        <button type="button" class="enhance-btn" data-target="discussion_points">✨ Enhance</button>
+      </div>
       <textarea id="discussion_points" name="discussion_points" rows="4">{{ form_data.get('discussion_points', '') }}</textarea>
     </div>
 
     <div class="form-field span-2">
-      <label for="decisions">Decisions made</label>
+      <div class="field-label-row">
+        <label for="decisions">Decisions made</label>
+        <button type="button" class="enhance-btn" data-target="decisions">✨ Enhance</button>
+      </div>
       <textarea id="decisions" name="decisions" rows="3">{{ form_data.get('decisions', '') }}</textarea>
     </div>
 
     <div class="form-field span-2">
-      <label for="action_items">Action items</label>
+      <div class="field-label-row">
+        <label for="action_items">Action items</label>
+        <button type="button" class="enhance-btn" data-target="action_items">✨ Enhance</button>
+      </div>
       <textarea id="action_items" name="action_items" rows="3">{{ form_data.get('action_items', '') }}</textarea>
     </div>
 
     <div class="form-field span-2">
-      <label for="ideas">Ideas raised</label>
+      <div class="field-label-row">
+        <label for="ideas">Ideas raised</label>
+        <button type="button" class="enhance-btn" data-target="ideas">✨ Enhance</button>
+      </div>
       <textarea id="ideas" name="ideas" rows="2">{{ form_data.get('ideas', '') }}</textarea>
     </div>
 
     <div class="form-field span-2">
-      <label for="notes">Other notes</label>
+      <div class="field-label-row">
+        <label for="notes">Other notes</label>
+        <button type="button" class="enhance-btn" data-target="notes">✨ Enhance</button>
+      </div>
       <textarea id="notes" name="notes" rows="2">{{ form_data.get('notes', '') }}</textarea>
     </div>
   </div>
