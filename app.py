@@ -309,6 +309,64 @@ def edit_meeting(meeting_id):
     return render_template("meeting_form.html", form_data=form_data, mode="edit", meeting=meeting)
 
 
+@app.route("/api/meetings/autosave", methods=["POST"])
+@login_required
+def autosave_meeting():
+    data = request.get_json(silent=True) or {}
+
+    title = (data.get("title") or "").strip()
+    partner_branch = (data.get("partner_branch") or "").strip()
+    date_str = data.get("meeting_date") or ""
+
+    # Autosave only once the minimum required fields are filled in.
+    if not title or not partner_branch or not date_str:
+        return jsonify({"saved": False, "reason": "missing_required_fields"})
+
+    try:
+        meeting_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return jsonify({"saved": False, "reason": "invalid_date"})
+
+    meeting_time = None
+    time_str = data.get("meeting_time") or ""
+    if time_str:
+        try:
+            meeting_time = datetime.strptime(time_str, "%H:%M").time()
+        except ValueError:
+            meeting_time = None
+
+    meeting_id = data.get("id")
+    meeting = None
+    if meeting_id:
+        meeting = Meeting.query.filter_by(id=meeting_id, user_id=current_user.id).first()
+
+    if meeting is None:
+        meeting = Meeting(user_id=current_user.id)
+        db.session.add(meeting)
+
+    meeting.title = title
+    meeting.partner_branch = partner_branch
+    meeting.meeting_type = data.get("meeting_type", "Video Call")
+    meeting.meeting_date = meeting_date
+    meeting.meeting_time = meeting_time
+    meeting.attendees = data.get("attendees", "")
+    meeting.agenda = data.get("agenda", "")
+    meeting.discussion_points = data.get("discussion_points", "")
+    meeting.decisions = data.get("decisions", "")
+    meeting.action_items = data.get("action_items", "")
+    meeting.ideas = data.get("ideas", "")
+    meeting.notes = data.get("notes", "")
+    meeting.priority = data.get("priority", "Medium")
+    meeting.status = data.get("status", "Scheduled")
+
+    db.session.commit()
+
+    return jsonify({
+        "saved": True,
+        "id": meeting.id,
+        "saved_at": datetime.utcnow().strftime("%H:%M:%S"),
+    })
+
 @app.route("/meetings/<int:meeting_id>/delete", methods=["POST"])
 @login_required
 def delete_meeting(meeting_id):

@@ -6,9 +6,11 @@
     <h1>{{ "Edit meeting" if mode == "edit" else "Log a meeting" }}</h1>
     <p class="page-sub">Capture the agenda, discussion, and follow-ups while they're fresh.</p>
   </div>
+  <span id="autosave-status" class="autosave-status"></span>
 </header>
 
 <form method="POST" class="meeting-form">
+  <input type="hidden" id="meeting_id" value="{{ meeting.id if meeting else '' }}">
   <div class="form-grid">
     <div class="form-field span-2">
       <label for="title">Meeting title</label>
@@ -208,6 +210,74 @@ document.querySelectorAll('.enhance-btn').forEach(function (btn) {
     }
   });
 });
+</script>
+
+<script>
+(function () {
+  const form = document.querySelector('.meeting-form');
+  const statusEl = document.getElementById('autosave-status');
+  const meetingIdField = document.getElementById('meeting_id');
+  let debounceTimer = null;
+
+  function buildAttendeesText() {
+    const lines = [];
+    document.querySelectorAll('#attendee-rows tr').forEach(function (tr) {
+      const name = tr.querySelector('.att-name').value.trim();
+      const position = tr.querySelector('.att-position').value.trim();
+      const contact = tr.querySelector('.att-contact').value.trim();
+      if (name || position || contact) lines.push(name + ' / ' + position + ' / ' + contact);
+    });
+    return lines.join('\n');
+  }
+
+  async function autosave() {
+    const payload = {
+      id: meetingIdField.value || null,
+      title: document.getElementById('title').value,
+      partner_branch: document.getElementById('partner_branch').value,
+      meeting_date: document.getElementById('meeting_date').value,
+      meeting_time: document.getElementById('meeting_time').value,
+      meeting_type: document.getElementById('meeting_type').value,
+      priority: document.getElementById('priority').value,
+      status: document.getElementById('status').value,
+      attendees: buildAttendeesText(),
+      agenda: document.getElementById('agenda').value,
+      discussion_points: document.getElementById('discussion_points').value,
+      decisions: document.getElementById('decisions').value,
+      action_items: document.getElementById('action_items').value,
+      ideas: document.getElementById('ideas').value,
+      notes: document.getElementById('notes').value,
+    };
+
+    statusEl.textContent = 'Saving…';
+    try {
+      const res = await fetch('/api/meetings/autosave', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.saved) {
+        if (data.id) meetingIdField.value = data.id;
+        statusEl.textContent = 'Saved at ' + data.saved_at;
+      } else {
+        statusEl.textContent = 'Fill in title, partner/branch, and date to enable autosave';
+      }
+    } catch (err) {
+      statusEl.textContent = 'Autosave failed — check your connection';
+    }
+  }
+
+  form.addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    statusEl.textContent = 'Editing…';
+    debounceTimer = setTimeout(autosave, 1500);
+  });
+  form.addEventListener('change', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(autosave, 500);
+  });
+})();
 </script>
 {% endblock %}
 {% endblock %}
